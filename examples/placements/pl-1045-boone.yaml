@@ -1,0 +1,41 @@
+# Placement record. Names and contact details are fictional placeholders.
+schema_version: 1
+
+id: PL-1045
+nurse:
+  id: N-0402
+  name: Alicia Boone
+  discipline: CNA
+  phone: "+1-555-0199"
+  email: alicia.boone@example.com
+facility: cedar-ridge-medical
+unit: Long-Term Care
+start_date: 2026-08-08
+coordinator:
+  name: Rosa Delgado
+  email: rosa@example-staffing.com
+
+documents:
+  # Already lapsed. The facility will bounce the packet on sight.
+  - requirement: cna-certification
+    received: 2024-07-16
+    expires: 2026-07-15
+    file: boone-cna.pdf
+
+  - requirement: bls-aha
+    received: 2026-02-20
+    expires: 2028-02-20
+    file: boone-bls.pdf
+
+  - requirement: tb-screening
+    received: 2026-06-05
+    expires: 2027-06-05
+    file: boone-tb.pdf
+
+  - requirement: mmr-titer
+    received: 2026-06-05
+    file: boone-mmr.pdf
+
+  - requirement: photo-id
+    received: 2026-06-05
+    file: boone-id.pdf

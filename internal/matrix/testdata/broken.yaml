@@ -1,0 +1,35 @@
+# Deliberately broken matrix. Every defect here is one the linter must
+# catch; do not "fix" this file.
+schema_version: 2
+facility:
+  id: St_Marys
+  name: ""
+  intake:
+    method: carrier-pigeon
+updated: 2020-01-01
+requirements:
+  - code: BLS_AHA
+    name: BLS provider card
+    category: certifcation
+    expires: false
+    lead_days: 30
+    applies_to:
+      disciplines: [RN, Nurse]
+    accepts: [pdf, tiff]
+  - code: bls-aha
+    name: BLS provider card (again)
+    category: certification
+    expires: true
+    lead_days: -5
+  - code: bls-aha
+    name: BLS provider card (third time)
+    category: certification
+    expires: true
+  - code: bls-aha
+    name: BLS provider card (fourth time)
+    category: certification
+    expires: true
+  - code: no-name
+    name: ""
+    category: ""
+    expires: false

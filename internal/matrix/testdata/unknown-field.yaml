@@ -1,0 +1,16 @@
+# A plausible typo: `requirments` instead of `requirements`. Strict decoding
+# must reject the file rather than silently produce an empty checklist.
+schema_version: 1
+facility:
+  id: typo-general
+  name: Typo General Hospital
+  intake:
+    method: fax
+    fax: "+1-555-0101"
+updated: 2026-07-01
+source: "test fixture"
+requirments:
+  - code: bls-aha
+    name: BLS provider card (AHA)
+    category: certification
+    expires: true

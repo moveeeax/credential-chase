@@ -1,0 +1,15 @@
+# Deliberately incomplete placement. Every omission here must be reported.
+schema_version: 1
+id: ""
+nurse:
+  name: ""
+  discipline: RN
+facility: ""
+coordinator:
+  name: Nobody
+documents:
+  - requirement: bls-aha
+  - requirement: ""
+    received: 2026-07-01
+  - requirement: flu-vaccination
+    waived: true

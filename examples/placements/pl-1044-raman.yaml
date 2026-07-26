@@ -1,0 +1,59 @@
+# Placement record. Names and contact details are fictional placeholders.
+schema_version: 1
+
+id: PL-1044
+nurse:
+  id: N-0311
+  name: Priya Raman
+  discipline: RN
+  phone: "+1-555-0188"
+  email: priya.raman@example.com
+facility: st-marys-rochester
+unit: ICU
+start_date: 2026-09-14
+coordinator:
+  name: Rosa Delgado
+  email: rosa@example-staffing.com
+
+documents:
+  - requirement: rn-license-mn
+    received: 2026-03-02
+    expires: 2028-02-28
+    file: raman-rn-license.pdf
+
+  - requirement: bls-aha
+    received: 2026-03-02
+    expires: 2028-02-29
+    file: raman-bls.pdf
+
+  - requirement: acls-aha
+    received: 2026-03-02
+    expires: 2028-02-29
+    file: raman-acls.pdf
+
+  - requirement: n95-fit-test
+    received: 2026-06-01
+    expires: 2027-06-01
+    file: raman-fit-test.pdf
+
+  - requirement: tb-screening
+    received: 2026-06-01
+    expires: 2027-06-01
+    file: raman-tb.pdf
+
+  - requirement: flu-vaccination
+    received: 2026-07-05
+    expires: 2027-03-31
+    file: raman-flu.pdf
+
+  - requirement: hipaa-attestation
+    received: 2026-06-10
+    file: raman-hipaa.pdf
+
+  - requirement: facility-orientation-packet
+    received: 2026-06-10
+    file: raman-orientation.pdf
+
+  - requirement: photo-id
+    received: 2026-06-10
+    file: raman-id.pdf

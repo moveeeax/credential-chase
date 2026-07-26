@@ -1,0 +1,55 @@
+# Placement record. Names and contact details are fictional placeholders.
+schema_version: 1
+
+id: PL-1043
+nurse:
+  id: N-0204
+  name: Marcus Ellison
+  discipline: RN
+  phone: "+1-555-0166"
+  email: marcus.ellison@example.com
+facility: st-marys-rochester
+unit: Med-Surg
+start_date: 2026-08-19
+coordinator:
+  name: Rosa Delgado
+  email: rosa@example-staffing.com
+
+documents:
+  - requirement: rn-license-mn
+    received: 2026-04-11
+    expires: 2028-01-31
+    file: ellison-rn-license.pdf
+
+  - requirement: bls-aha
+    received: 2026-04-11
+    expires: 2027-10-31
+    file: ellison-bls.pdf
+
+  - requirement: tb-screening
+    received: 2026-05-30
+    expires: 2027-05-30
+    file: ellison-tb.pdf
+
+  - requirement: flu-vaccination
+    received: 2026-07-02
+    expires: 2027-03-31
+    file: ellison-flu.pdf
+
+  - requirement: hipaa-attestation
+    received: 2026-07-14
+    file: ellison-hipaa.pdf
+
+  - requirement: facility-orientation-packet
+    received: 2026-07-14
+    file: ellison-orientation.pdf
+
+  - requirement: photo-id
+    received: 2026-07-14
+    file: ellison-id.pdf
+
+  # Filed under a code St Mary's does not use. The engine surfaces it as an
+  # orphan rather than quietly counting it towards tb-screening.
+  - requirement: ppd-test
+    received: 2026-05-30
+    file: ellison-ppd.pdf

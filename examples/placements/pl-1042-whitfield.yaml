@@ -1,0 +1,52 @@
+# Placement record. Names and contact details are fictional placeholders.
+schema_version: 1
+
+id: PL-1042
+nurse:
+  id: N-0117
+  name: Dana Whitfield
+  discipline: RN
+  phone: "+1-555-0143"
+  email: dana.whitfield@example.com
+facility: st-marys-rochester
+unit: ICU
+start_date: 2026-08-05
+end_date: 2026-11-04
+coordinator:
+  name: Rosa Delgado
+  email: rosa@example-staffing.com
+
+documents:
+  - requirement: rn-license-mn
+    received: 2026-05-02
+    expires: 2027-04-30
+    file: whitfield-rn-license.pdf
+
+  # Valid today, but lapses 26 days after the start date and the facility
+  # wants 30. This is the case a spreadsheet always misses.
+  - requirement: bls-aha
+    received: 2026-05-02
+    expires: 2026-08-31
+    file: whitfield-bls.pdf
+
+  - requirement: n95-fit-test
+    received: 2026-07-20
+    expires: 2027-07-20
+    file: whitfield-fit-test.pdf
+
+  - requirement: tb-screening
+    received: 2026-06-15
+    expires: 2027-06-15
+    file: whitfield-tb.pdf
+
+  - requirement: flu-vaccination
+    waived: true
+    waiver_note: "Off-season start; facility waiver ref SMR-W-3391, 2026-07-18"
+
+  - requirement: hipaa-attestation
+    received: 2026-07-01
+    file: whitfield-hipaa.pdf
+
+  - requirement: photo-id
+    received: 2026-07-01
+    file: whitfield-id.pdf

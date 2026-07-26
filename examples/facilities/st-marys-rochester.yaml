@@ -1,0 +1,86 @@
+# Facility requirement matrix — hand-entered from the packet the facility
+# emails to the agency. Every value here came from a real document; nothing
+# is inferred. Contact details are placeholders in this example file.
+schema_version: 1
+
+facility:
+  id: st-marys-rochester
+  name: St Mary's Regional
+  intake:
+    method: fax
+    fax: "+1-555-0100"
+    attention: Credentialing — Contract Labour
+    cover_sheet_required: true
+
+updated: 2026-07-01
+source: "Requirement packet, emailed by facility credentialing 2026-06-28"
+
+requirements:
+  - code: rn-license-mn
+    name: RN licence (Minnesota or eNLC)
+    category: license
+    expires: true
+    lead_days: 90
+    applies_to:
+      disciplines: [RN]
+    accepts: [pdf]
+    notes: Verify on Nursys; this record is the copy the facility files.
+
+  - code: bls-aha
+    name: BLS provider card (AHA)
+    category: certification
+    expires: true
+    lead_days: 30
+    accepts: [pdf, jpg]
+    notes: AHA only. Red Cross cards are rejected at this facility.
+
+  - code: acls-aha
+    name: ACLS provider card (AHA)
+    category: certification
+    expires: true
+    lead_days: 30
+    applies_to:
+      disciplines: [RN]
+      units: [ICU, ED]
+    accepts: [pdf, jpg]
+
+  - code: n95-fit-test
+    name: N95 respirator fit test
+    category: health
+    expires: true
+    lead_days: 0
+    accepts: [pdf, jpg]
+
+  - code: tb-screening
+    name: TB screening (2-step PPD or IGRA)
+    category: health
+    expires: true
+    lead_days: 0
+    accepts: [pdf]
+
+  - code: flu-vaccination
+    name: Influenza vaccination or declination
+    category: health
+    expires: true
+    lead_days: 0
+    waivable: true
+    accepts: [pdf]
+    notes: Declination accepted outside the 1 Oct – 31 Mar season.
+
+  - code: hipaa-attestation
+    name: HIPAA attestation
+    category: training
+    expires: false
+    accepts: [pdf]
+
+  - code: facility-orientation-packet
+    name: Facility orientation packet (signed)
+    category: form
+    expires: false
+    accepts: [pdf]
+
+  - code: photo-id
+    name: Government photo ID
+    category: identity
+    expires: false
+    accepts: [pdf, jpg, png]
