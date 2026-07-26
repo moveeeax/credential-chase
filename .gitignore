@@ -1,0 +1,22 @@
+# Build output. Anchored to the repo root: an unanchored `credchase` would
+# also swallow cmd/credchase/.
+/bin/
+/dist/
+/credchase
+
+# Go test and coverage artefacts
+*.test
+*.out
+coverage.txt
+
+# Real operational data must never land in git: ledgers carry nurse phone
+# numbers and email addresses.
+*.ledger.json
+/ledger.json
+/data/
+
+# Editors and OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
