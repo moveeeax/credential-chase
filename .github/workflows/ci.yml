@@ -1,0 +1,66 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: gofmt
+        run: |
+          unformatted=$(gofmt -l . )
+          if [ -n "$unformatted" ]; then
+            echo "not gofmt-clean:"
+            echo "$unformatted"
+            exit 1
+          fi
+
+      - name: go vet
+        run: go vet ./...
+
+      - name: build
+        run: go build ./...
+
+      - name: test
+        run: go test -race -count=1 ./...
+
+  smoke:
+    # The README promises a usage example that runs. Run it.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: build the CLI
+        run: go build -o bin/credchase ./cmd/credchase
+
+      - name: lint the example matrices
+        run: ./bin/credchase lint -as-of 2026-08-01 -strict examples/facilities
+
+      - name: board, chase and audit the example placements
+        run: |
+          set -o pipefail
+          # board exits 2 while red placements exist; that is the point.
+          ./bin/credchase board -as-of 2026-08-01 || [ $? -eq 2 ]
+          ./bin/credchase chase -as-of 2026-08-01 -ledger "$RUNNER_TEMP/ledger.json" -commit
+          ./bin/credchase chase -as-of 2026-08-01 -ledger "$RUNNER_TEMP/ledger.json" \
+            | grep -q "0 action(s) due"
+          ./bin/credchase audit -ledger "$RUNNER_TEMP/ledger.json" | head -1
