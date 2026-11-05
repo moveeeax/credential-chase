@@ -39,7 +39,7 @@ cell is green.
 
 ## Install
 
-Requires Go 1.24 or newer.
+Requires Go 1.26 or newer.
 
 ```sh
 go install github.com/moveeeax/credential-chase/cmd/credchase@latest
@@ -270,4 +270,4 @@ belong nowhere near this repository — see `.gitignore`.
 
 ## Licence
 
-Not yet chosen. All rights reserved until one is added.
+MIT. See [LICENSE](LICENSE).
