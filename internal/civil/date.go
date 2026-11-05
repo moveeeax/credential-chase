@@ -11,7 +11,7 @@ import (
 	"fmt"
 	"time"
 
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v3"
 )
 
 // Layout is the only date format accepted anywhere in credential-chase.
