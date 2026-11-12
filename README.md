@@ -26,7 +26,8 @@ cell is green.
   placement, including unknown keys.
 - **Missing/expiring engine** — evaluates every placement against its
   facility matrix. Statuses: `missing`, `expired`, `short` (valid, but not
-  for long enough), `waived`, `ok`. Severities follow a warn/critical model:
+  for long enough), `unusable` (the file behind the record would be
+  rejected), `waived`, `ok`. Severities follow a warn/critical model:
   an open item is a warning while there is runway, and critical at or inside
   seven days.
 - **Coordinator board** — one screen, red/amber/green per placement, sorted
@@ -121,6 +122,25 @@ RED  PL-1042 — Dana Whitfield at St Mary's Regional
 valid past the start date, but only for 26 of the 30 days St Mary's requires.
 
 Add `-json` to any of `check`, `board` or `lint` for machine-readable output.
+
+### Check the files behind the records
+
+A record can say `file: whitfield-bls.docx` while the facility only takes
+PDF, or point at a scan nobody ever saved. `check`, `board` and `chase`
+always compare each document's file extension with the requirement's
+`accepts` list (case-insensitive, `.jpeg` counts as `jpg`). Pass
+`-docs-dir DIR` and they also require every referenced file to exist under
+`DIR` and be non-empty:
+
+```sh
+./bin/credchase check -as-of 2026-08-01 -docs-dir ./scans
+```
+
+A file that fails either check turns the item `unusable`, which is always
+critical regardless of runway, and the JSON item carries the reason in
+`file_problem`. An expired document stays `expired` but still reports its
+`file_problem`. Waived items and records without a `file:` are not checked.
+A `-docs-dir` that does not exist is an input error (exit `1`).
 
 ### 4. Work out today's chase
 

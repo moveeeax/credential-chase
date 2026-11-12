@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `unusable` item status, always critical: a document's `file:` has an
+  extension outside the requirement's `accepts`, or, with the new
+  `-docs-dir DIR` flag on `check`, `board` and `chase`, the file is missing
+  or empty. JSON items gain a `file_problem` field.
 - MIT `LICENSE` file; the project was previously unlicensed.
 - This changelog.
 
