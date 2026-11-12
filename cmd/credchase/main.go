@@ -36,6 +36,8 @@ usage:
 
 common flags:
   -as-of YYYY-MM-DD   evaluate as if today were this date (default: today, UTC)
+  -docs-dir DIR       check, board, chase: the files named by documents[].file
+                      must exist in DIR and be non-empty (default: extension only)
   -json               machine-readable output
 
 exit codes:
@@ -92,6 +94,7 @@ type inputs struct {
 	placementPaths string
 	asOf           string
 	criticalDays   int
+	docsDir        string
 	jsonOut        bool
 }
 
@@ -102,6 +105,9 @@ func (in *inputs) bind(fs *flag.FlagSet, withPlacements bool) {
 	}
 	fs.StringVar(&in.asOf, "as-of", "", "evaluate as if today were this date (YYYY-MM-DD)")
 	fs.IntVar(&in.criticalDays, "critical-days", engine.DefaultCriticalDays, "runway at or below which an open item is critical")
+	if withPlacements {
+		fs.StringVar(&in.docsDir, "docs-dir", "", "directory holding the files named by documents[].file; each must exist and be non-empty")
+	}
 	fs.BoolVar(&in.jsonOut, "json", false, "emit JSON")
 }
 
@@ -117,6 +123,17 @@ func (in *inputs) board() (engine.Board, []*placement.Placement, error) {
 	if err != nil {
 		return engine.Board{}, nil, err
 	}
+	if in.docsDir != "" {
+		// A typo here would otherwise mark every file "not found" and paint
+		// the whole board red. Treat it as the input error it is.
+		info, err := os.Stat(in.docsDir)
+		if err != nil {
+			return engine.Board{}, nil, fmt.Errorf("-docs-dir: %w", err)
+		}
+		if !info.IsDir() {
+			return engine.Board{}, nil, fmt.Errorf("-docs-dir: %s is not a directory", in.docsDir)
+		}
+	}
 	set, err := matrix.Load(split(in.matrixPaths)...)
 	if err != nil {
 		return engine.Board{}, nil, err
@@ -125,7 +142,7 @@ func (in *inputs) board() (engine.Board, []*placement.Placement, error) {
 	if err != nil {
 		return engine.Board{}, nil, err
 	}
-	b, err := engine.EvaluateAll(ps, set, engine.Options{AsOf: asOf, CriticalDays: in.criticalDays})
+	b, err := engine.EvaluateAll(ps, set, engine.Options{AsOf: asOf, CriticalDays: in.criticalDays, DocsDir: in.docsDir})
 	return b, ps, err
 }
 

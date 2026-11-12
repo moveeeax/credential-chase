@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -195,5 +196,72 @@ func TestUnknownCommandPrintsUsage(t *testing.T) {
 	}
 	if !strings.Contains(errOut, "usage:") {
 		t.Errorf("no usage on stderr:\n%s", errOut)
+	}
+}
+
+func TestDocsDirTurnsAMissingFileIntoARedPlacement(t *testing.T) {
+	raman := filepath.Join(placements, "pl-1044-raman.yaml")
+	dir := t.TempDir()
+	for _, f := range []string{
+		"raman-rn-license.pdf", "raman-bls.pdf", "raman-acls.pdf", "raman-fit-test.pdf",
+		"raman-tb.pdf", "raman-flu.pdf", "raman-hipaa.pdf", "raman-orientation.pdf",
+	} { // raman-id.pdf deliberately left out
+		if err := os.WriteFile(filepath.Join(dir, f), []byte("%PDF-1.7"), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	// Without -docs-dir the green placement stays green.
+	if out, _, code := exec(t, "board", "-matrix", facilities, "-placements", raman, "-as-of", demoDate); code != 0 {
+		t.Fatalf("exit %d without -docs-dir, want 0:\n%s", code, out)
+	}
+
+	out, _, code := exec(t, "check", "-matrix", facilities, "-placements", raman, "-as-of", demoDate, "-docs-dir", dir, "-json")
+	if code != 2 {
+		t.Fatalf("exit %d with a missing file, want 2:\n%s", code, out)
+	}
+	var board struct {
+		Placements []struct {
+			Status string `json:"status"`
+			Items  []struct {
+				Code        string `json:"code"`
+				Status      string `json:"status"`
+				FileProblem string `json:"file_problem"`
+			} `json:"items"`
+		} `json:"placements"`
+	}
+	if err := json.Unmarshal([]byte(out), &board); err != nil {
+		t.Fatalf("output is not valid JSON: %v\n%s", err, out)
+	}
+	pl := board.Placements[0]
+	if pl.Status != "red" {
+		t.Errorf("status = %s, want red", pl.Status)
+	}
+	for _, it := range pl.Items {
+		switch {
+		case it.Code == "photo-id":
+			if it.Status != "unusable" || !strings.Contains(it.FileProblem, "raman-id.pdf") {
+				t.Errorf("photo-id = %+v, want unusable naming raman-id.pdf", it)
+			}
+		case it.FileProblem != "":
+			t.Errorf("%s has a file problem but its file exists: %q", it.Code, it.FileProblem)
+		}
+	}
+
+	out, _, _ = exec(t, "board", "-matrix", facilities, "-placements", raman, "-as-of", demoDate, "-docs-dir", dir)
+	if !strings.Contains(out, "RED") || !strings.Contains(out, "photo-id") {
+		t.Errorf("board does not show the unusable photo-id:\n%s", out)
+	}
+}
+
+func TestDocsDirThatDoesNotExistIsAnInputError(t *testing.T) {
+	missing := filepath.Join(t.TempDir(), "no-such-dir")
+	_, errOut, code := exec(t, "board", "-matrix", facilities, "-placements", placements,
+		"-as-of", demoDate, "-docs-dir", missing)
+	if code != 1 {
+		t.Fatalf("exit %d, want 1 for a -docs-dir that does not exist", code)
+	}
+	if !strings.Contains(errOut, "-docs-dir") {
+		t.Errorf("error does not name the flag:\n%s", errOut)
 	}
 }

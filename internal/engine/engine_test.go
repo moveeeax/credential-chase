@@ -1,6 +1,9 @@
 package engine_test
 
 import (
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/moveeeax/credential-chase/internal/civil"
@@ -240,5 +243,147 @@ func TestPlacementWithoutAMatrixIsAnError(t *testing.T) {
 	}
 	if _, err := engine.EvaluateAll([]*placement.Placement{p}, set, engine.Options{}); err == nil {
 		t.Fatal("a placement with no facility matrix was silently accepted")
+	}
+}
+
+// fileFixture is one facility with a single non-expiring requirement and a
+// placement that has filed a document for it under the given file name.
+func fileFixture(file string, accepts ...string) (*placement.Placement, *matrix.Matrix) {
+	m := &matrix.Matrix{
+		Facility: matrix.Facility{ID: "f", Name: "F"},
+		Requirements: []matrix.Requirement{
+			{Code: "photo-id", Name: "Photo ID", Category: matrix.CategoryIdentity, Accepts: accepts},
+		},
+	}
+	p := &placement.Placement{
+		ID: "P-1", Facility: "f", StartDate: civil.MustParse("2026-10-01"),
+		Nurse: placement.Nurse{Name: "A B", Discipline: "RN"},
+		Documents: []placement.Document{
+			{Requirement: "photo-id", Received: civil.MustParse("2026-07-01"), File: file},
+		},
+	}
+	return p, m
+}
+
+func writeFile(t *testing.T, dir, name, body string) {
+	t.Helper()
+	if err := os.WriteFile(filepath.Join(dir, name), []byte(body), 0o600); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestFileInAFormatTheFacilityRejectsIsUnusable(t *testing.T) {
+	// No DocsDir: the extension is still checked, and the start is 61 days
+	// out, so this would be a warning if it were an ordinary gap.
+	p, m := fileFixture("ellison-id.docx", "pdf", "jpg")
+	res := engine.Evaluate(p, m, engine.Options{AsOf: civil.MustParse("2026-08-01")})
+
+	it := res.Items[0]
+	if it.Status != engine.StatusUnusable || it.Severity != engine.SeverityCritical {
+		t.Fatalf("status/severity = %s/%s, want unusable/critical", it.Status, it.Severity)
+	}
+	if !strings.Contains(it.FileProblem, "docx") || !strings.Contains(it.FileProblem, "pdf, jpg") {
+		t.Errorf("file_problem = %q, want the extension and the accepted formats", it.FileProblem)
+	}
+	if it.Detail != it.FileProblem {
+		t.Errorf("detail = %q, want the file problem so the chase message names it", it.Detail)
+	}
+	if res.Status != engine.Red || res.Critical != 1 {
+		t.Errorf("board = %s with %d critical, want red with 1", res.Status, res.Critical)
+	}
+}
+
+func TestExtensionCheckIgnoresCaseAndFoldsJPEG(t *testing.T) {
+	for _, name := range []string{"id.PDF", "id.jpeg", "id.JPG"} {
+		p, m := fileFixture(name, "pdf", "jpg")
+		it := engine.Evaluate(p, m, engine.Options{AsOf: civil.MustParse("2026-08-01")}).Items[0]
+		if it.Status != engine.StatusOK || it.FileProblem != "" {
+			t.Errorf("%s: status %s, file_problem %q, want ok", name, it.Status, it.FileProblem)
+		}
+	}
+}
+
+func TestEmptyAcceptsAllowsAnyExtension(t *testing.T) {
+	p, m := fileFixture("id.docx")
+	it := engine.Evaluate(p, m, engine.Options{AsOf: civil.MustParse("2026-08-01")}).Items[0]
+	if it.Status != engine.StatusOK {
+		t.Errorf("status = %s, want ok when the matrix lists no formats", it.Status)
+	}
+}
+
+func TestWithoutDocsDirAMissingFileIsNotChecked(t *testing.T) {
+	p, m := fileFixture("nowhere.pdf", "pdf")
+	it := engine.Evaluate(p, m, engine.Options{AsOf: civil.MustParse("2026-08-01")}).Items[0]
+	if it.Status != engine.StatusOK {
+		t.Errorf("status = %s, want ok: existence is only checked with DocsDir", it.Status)
+	}
+}
+
+func TestDocsDirCatchesMissingAndEmptyFiles(t *testing.T) {
+	dir := t.TempDir()
+	writeFile(t, dir, "good.pdf", "%PDF-1.7")
+	writeFile(t, dir, "empty.pdf", "")
+	if err := os.Mkdir(filepath.Join(dir, "folder.pdf"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+
+	cases := []struct {
+		file    string
+		problem string
+	}{
+		{"good.pdf", ""},
+		{"missing.pdf", "not found"},
+		{"empty.pdf", "is empty"},
+		{"folder.pdf", "not a regular file"},
+	}
+	for _, c := range cases {
+		p, m := fileFixture(c.file, "pdf")
+		it := engine.Evaluate(p, m, engine.Options{AsOf: civil.MustParse("2026-08-01"), DocsDir: dir}).Items[0]
+		if c.problem == "" {
+			if it.Status != engine.StatusOK || it.FileProblem != "" {
+				t.Errorf("%s: status %s, file_problem %q, want ok", c.file, it.Status, it.FileProblem)
+			}
+			continue
+		}
+		if it.Status != engine.StatusUnusable || it.Severity != engine.SeverityCritical {
+			t.Errorf("%s: status/severity = %s/%s, want unusable/critical", c.file, it.Status, it.Severity)
+		}
+		if !strings.Contains(it.FileProblem, c.problem) {
+			t.Errorf("%s: file_problem = %q, want it to mention %q", c.file, it.FileProblem, c.problem)
+		}
+	}
+}
+
+func TestExpiredDocumentKeepsItsStatusButReportsTheFileProblem(t *testing.T) {
+	m := &matrix.Matrix{
+		Facility: matrix.Facility{ID: "f", Name: "F"},
+		Requirements: []matrix.Requirement{
+			{Code: "bls-aha", Name: "BLS", Category: matrix.CategoryCertification, Expires: true, Accepts: []string{"pdf"}},
+		},
+	}
+	p := &placement.Placement{
+		ID: "P-1", Facility: "f", StartDate: civil.MustParse("2026-10-01"),
+		Nurse: placement.Nurse{Name: "A B", Discipline: "RN"},
+		Documents: []placement.Document{{
+			Requirement: "bls-aha", Received: civil.MustParse("2024-07-01"),
+			Expires: civil.MustParse("2026-07-01"), File: "bls.png",
+		}},
+	}
+	it := engine.Evaluate(p, m, engine.Options{AsOf: civil.MustParse("2026-08-01")}).Items[0]
+	if it.Status != engine.StatusExpired {
+		t.Errorf("status = %s, want expired to win over the file problem", it.Status)
+	}
+	if it.FileProblem == "" {
+		t.Error("file_problem is empty; the png is still worth reporting")
+	}
+}
+
+func TestWaivedDocumentFileIsNotChecked(t *testing.T) {
+	p, m := fileFixture("waiver.docx", "pdf")
+	p.Documents[0].Waived = true
+	p.Documents[0].WaiverNote = "facility ref 1"
+	it := engine.Evaluate(p, m, engine.Options{AsOf: civil.MustParse("2026-08-01"), DocsDir: t.TempDir()}).Items[0]
+	if it.Status != engine.StatusWaived || it.FileProblem != "" {
+		t.Errorf("status %s, file_problem %q, want waived with no file check", it.Status, it.FileProblem)
 	}
 }
